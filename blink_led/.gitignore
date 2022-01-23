@@ -1,0 +1,15 @@
+# Object files
+*.o
+
+# Libraries
+*.lib
+*.a
+
+# build folder
+*.bin
+*.elf
+*.hex
+*.map
+*.lst
+*.d
+*.o

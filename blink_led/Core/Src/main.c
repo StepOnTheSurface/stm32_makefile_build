@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "gpio.h"
+#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -53,6 +54,14 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int _write(int file, char *ptr, int len)
+{
+    /* Implement your write code here, this is used by puts and printf for example */
+    int i=0;
+    for(i=0 ; i<len ; i++)
+        ITM_SendChar((*ptr++));
+    return len;
+}
 
 /* USER CODE END 0 */
 
@@ -95,6 +104,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+      HAL_Delay(1000);
+      static uint32_t count = 0;
+      printf("LED has been toggled count: %ld \r\n", count++);
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LD3, and LD4
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin);
   }

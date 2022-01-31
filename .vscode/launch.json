@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "DebugSTMicrocontroller",
+            "cwd": "${workspaceRoot}",
+            "executable": "./blink_led/build/blink_led.elf",
+            "request": "launch",
+            "type": "cortex-debug",
+            "showDevDebugOutput": false,
+            "servertype": "openocd",
+            "device": "STM32F429ZIT",
+
+            "configFiles": [
+                "/usr/local/Homebrew/Cellar/open-ocd/0.11.0/share/openocd/scripts/interface/stlink.cfg",
+                "/usr/local/Homebrew/Cellar/open-ocd/0.11.0/share/openocd/scripts/target/stm32f4x.cfg",
+            ]
+        },        
+    ]
+}

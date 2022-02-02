@@ -58,6 +58,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 
+void ledBlinkyTask(void * pvParameters);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -96,6 +97,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  xTaskCreate(ledBlinkyTask, "ledBlinkyTask", 1024, NULL, osPriorityNormal, NULL);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -124,6 +126,17 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void ledBlinkyTask(void * pvParameters) {
+  /* USER CODE BEGIN StartDefaultTask */
+  static uint32_t count = 0;
+  /* Infinite loop */
+  while (1) {
+      osDelay(1000);
+      HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3, and LED4
+	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin);
+  }
+  /* USER CODE END StartDefaultTask */
+}
 
 /* USER CODE END Application */
 

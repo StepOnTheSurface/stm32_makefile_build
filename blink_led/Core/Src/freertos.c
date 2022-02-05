@@ -58,6 +58,15 @@ const osThreadAttr_t defaultTask_attributes = {
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 
+typedef struct testTaskStruct {
+      int testNum;
+      char* testChar;
+  } xTestTaskStruct;
+
+xTestTaskStruct xTestStruct = {
+    10,
+    "TestTask"
+  };
 TaskHandle_t xLedBlinkyHandle;
 void ledBlinkyTask(void * pvParameters);
 /* USER CODE END FunctionPrototypes */
@@ -99,7 +108,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   int testNum = 0;
-  xTaskCreate(ledBlinkyTask, "ledBlinkyTask", 1024, (void *)&testNum, osPriorityNormal, xLedBlinkyHandle);
+  xTaskCreate(ledBlinkyTask, "ledBlinkyTask", 1024, (void *)&xTestStruct, osPriorityNormal, xLedBlinkyHandle);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -131,20 +140,20 @@ void StartDefaultTask(void *argument)
 void ledBlinkyTask(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   static uint32_t count = 0;
-  int *pInt = (int *)pvParameters;
+  xTestTaskStruct* xTest;
+  xTest = (xTestTaskStruct *)pvParameters;
   /* Infinite loop */
   while (1) {
       count++;
-      (*pInt) = count;
+      xTest->testNum = count;
       osDelay(1000);
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3, and LED4
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin);
-      // if (10 == count) {
-      //     vTaskDelete(xLedBlinkyHandle); // delete ledBlinkyTask task, Use the handle passed out of xTaskCreate()
-      //     // vTaskDelete(NULL); // Delete the task that called this function by passing NULL
-      // }
-      if (10 == (*pInt)) {
-          vTaskDelete(NULL);
+
+      if (strncmp("TestTask", xTest->testChar, strlen("TestTask")) == 0) {
+          if (10 == xTest->testNum ) {
+              vTaskDelete(NULL);
+          }
       }
   }
   /* USER CODE END StartDefaultTask */

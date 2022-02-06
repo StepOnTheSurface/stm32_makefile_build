@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -140,6 +141,7 @@ void StartDefaultTask(void *argument)
 void ledBlinkyTask(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   static uint32_t count = 0;
+  UBaseType_t uxLedCreatedPriority;
   xTestTaskStruct* xTest;
   xTest = (xTestTaskStruct *)pvParameters;
   /* Infinite loop */
@@ -149,6 +151,14 @@ void ledBlinkyTask(void * pvParameters) {
       osDelay(1000);
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3, and LED4
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin);
+
+      uxLedCreatedPriority = uxTaskPriorityGet(xLedBlinkyHandle);
+      printf("ledBlinkyTask priority is %ld \r\n", uxLedCreatedPriority);
+
+      vTaskPrioritySet(xLedBlinkyHandle, osPriorityNormal + 1);
+
+      uxLedCreatedPriority = uxTaskPriorityGet(xLedBlinkyHandle);
+      printf("ledBlinkyTask priority is %ld \r\n", uxLedCreatedPriority);
 
       if (strncmp("TestTask", xTest->testChar, strlen("TestTask")) == 0) {
           if (10 == xTest->testNum ) {

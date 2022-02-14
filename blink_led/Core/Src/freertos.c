@@ -68,8 +68,11 @@ xTestTaskStruct xTestStruct = {
     10,
     "TestTask"
   };
-TaskHandle_t xLedBlinkyHandle;
-void ledBlinkyTask(void * pvParameters);
+
+TaskHandle_t xLedBlinkyHandle1;
+TaskHandle_t xLedBlinkyHandle2;
+void ledBlinkyTask1(void * pvParameters);
+void ledBlinkyTask2(void * pvParameters);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -108,8 +111,9 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  int testNum = 0;
-  xTaskCreate(ledBlinkyTask, "ledBlinkyTask", 1024, (void *)&xTestStruct, osPriorityNormal, xLedBlinkyHandle);
+  xTaskCreate(ledBlinkyTask1, "ledBlinkyTask1", 1024, (void *)&xTestStruct, osPriorityNormal, xLedBlinkyHandle1);
+  xTaskCreate(ledBlinkyTask2, "ledBlinkyTask2", 1024, (void *)&xTestStruct, osPriorityNormal, xLedBlinkyHandle2);
+
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
@@ -138,33 +142,22 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-void ledBlinkyTask(void * pvParameters) {
+void ledBlinkyTask1(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
-  static uint32_t count = 0;
-  UBaseType_t uxLedCreatedPriority;
-  xTestTaskStruct* xTest;
-  xTest = (xTestTaskStruct *)pvParameters;
   /* Infinite loop */
   while (1) {
-      count++;
-      xTest->testNum = count;
       osDelay(1000);
-      HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3, and LED4
-	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin);
+      HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
+  }
+  /* USER CODE END StartDefaultTask */
+}
 
-      uxLedCreatedPriority = uxTaskPriorityGet(xLedBlinkyHandle);
-      printf("ledBlinkyTask priority is %ld \r\n", uxLedCreatedPriority);
-
-      vTaskPrioritySet(xLedBlinkyHandle, osPriorityNormal + 1);
-
-      uxLedCreatedPriority = uxTaskPriorityGet(xLedBlinkyHandle);
-      printf("ledBlinkyTask priority is %ld \r\n", uxLedCreatedPriority);
-
-      if (strncmp("TestTask", xTest->testChar, strlen("TestTask")) == 0) {
-          if (10 == xTest->testNum ) {
-              vTaskDelete(NULL);
-          }
-      }
+void ledBlinkyTask2(void * pvParameters) {
+  /* USER CODE BEGIN StartDefaultTask */
+  /* Infinite loop */
+  while (1) {
+      osDelay(1000);
+	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin); // Toggle LED4
   }
   /* USER CODE END StartDefaultTask */
 }

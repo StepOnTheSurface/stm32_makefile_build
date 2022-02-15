@@ -112,7 +112,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   xTaskCreate(ledBlinkyTask1, "ledBlinkyTask1", 1024, (void *)&xTestStruct, osPriorityNormal, xLedBlinkyHandle1);
-  xTaskCreate(ledBlinkyTask2, "ledBlinkyTask2", 1024, (void *)&xTestStruct, osPriorityNormal, xLedBlinkyHandle2);
+  xTaskCreate(ledBlinkyTask2, "ledBlinkyTask2", 1024, (void *)&xTestStruct, osPriorityNormal1, xLedBlinkyHandle2);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -156,7 +156,7 @@ void ledBlinkyTask2(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   while (1) {
-      osDelay(1000);
+      // osDelay(1000);
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin); // Toggle LED4
   }
   /* USER CODE END StartDefaultTask */

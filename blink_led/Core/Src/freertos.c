@@ -155,9 +155,14 @@ void ledBlinkyTask1(void * pvParameters) {
 void ledBlinkyTask2(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
+  int count = 0;
   while (1) {
-      // osDelay(1000);
+      osDelay(1000);
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin); // Toggle LED4
+      count++;
+      if (6 == count) {
+          vTaskSuspend(NULL);
+      }
   }
   /* USER CODE END StartDefaultTask */
 }

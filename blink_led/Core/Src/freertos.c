@@ -111,8 +111,8 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  xTaskCreate(ledBlinkyTask1, "ledBlinkyTask1", 1024, (void *)&xTestStruct, osPriorityNormal, xLedBlinkyHandle1);
-  xTaskCreate(ledBlinkyTask2, "ledBlinkyTask2", 1024, (void *)&xTestStruct, osPriorityNormal1, xLedBlinkyHandle2);
+  xTaskCreate(ledBlinkyTask1, "ledBlinkyTask1", 1024, (void *)&xTestStruct, osPriorityNormal, &xLedBlinkyHandle1);
+  xTaskCreate(ledBlinkyTask2, "ledBlinkyTask2", 1024, (void *)&xTestStruct, osPriorityNormal1, &xLedBlinkyHandle2);
 
   /* USER CODE END RTOS_THREADS */
 

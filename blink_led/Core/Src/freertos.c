@@ -152,7 +152,16 @@ void ledBlinkyTask1(void * pvParameters) {
       count++;
       if(10 == count) {
           vTaskResume(xLedBlinkyHandle2);
+      } else if (15 == count) {
+          vTaskSuspendAll();
+          // Noted: Other FreeRTOS API functions should not be called while the scheduler is suspended.
+          for (int i = 0; i < 5; i++) {
+              HAL_Delay(1000);
+              HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
+          }
+          xTaskResumeAll();
       }
+
   }
   /* USER CODE END StartDefaultTask */
 }

@@ -162,6 +162,14 @@ void ledBlinkyTask1(void * pvParameters) {
           xTaskResumeAll();
       }
 
+      UBaseType_t taskNum = uxTaskGetNumberOfTasks();
+      printf("Current task num: %ld \r\n", taskNum);
+      if (5 == taskNum) { // StartDefaultTask, ledBlinkyTask1, ledBlinkyTask2...
+          for (int i = 0; i < 6; i++) {
+              HAL_Delay(300);
+              HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
+          }
+      }
   }
   /* USER CODE END StartDefaultTask */
 }

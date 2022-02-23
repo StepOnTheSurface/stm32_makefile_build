@@ -173,6 +173,14 @@ void ledBlinkyTask1(void * pvParameters) {
               HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
           }
       }
+
+      static char cBuffer[512] = {0};
+      vTaskList(cBuffer);
+      printf("---------------------------------------------\r\n");
+      printf("Name        State    Priority    Stack    Num\r\n");
+      printf("*********************************************\r\n");
+
+      printf("%s\r\n", cBuffer);
   }
   /* USER CODE END StartDefaultTask */
 }

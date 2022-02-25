@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -65,6 +66,19 @@ int _write(int file, char *ptr, int len)
     return len;
 }
 
+#ifdef __GNUC__
+/* With GCC, small printf (option LD Linker->Libraries->Small printf
+   set to 'Yes') calls __io_putchar() */
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+
+PUTCHAR_PROTOTYPE {
+	HAL_UART_Transmit(&huart4, (uint8_t *)&ch, 1, 0xFFFF);
+	return ch;
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -95,6 +109,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -116,6 +131,7 @@ int main(void)
       HAL_Delay(1000);
       static uint32_t count = 0;
       printf("LED has been toggled count: %ld \r\n", count++);
+      printf("Hello");
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LD3, and LD4
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin);
   }

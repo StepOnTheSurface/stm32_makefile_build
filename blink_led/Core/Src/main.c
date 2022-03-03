@@ -57,15 +57,6 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int _write(int file, char *ptr, int len)
-{
-    /* Implement your write code here, this is used by puts and printf for example */
-    int i=0;
-    for(i=0 ; i<len ; i++)
-        ITM_SendChar((*ptr++));
-    return len;
-}
-
 #ifdef __GNUC__
 /* With GCC, small printf (option LD Linker->Libraries->Small printf
    set to 'Yes') calls __io_putchar() */
@@ -79,6 +70,15 @@ PUTCHAR_PROTOTYPE {
 	return ch;
 }
 
+int _write(int file, char *ptr, int len)
+{
+    /* Implement your write code here, this is used by puts and printf for example */
+    int i=0;
+    for(i=0 ; i<len ; i++)
+        // ITM_SendChar((*ptr++));
+        __io_putchar(*ptr++);
+    return len;
+}
 /* USER CODE END 0 */
 
 /**

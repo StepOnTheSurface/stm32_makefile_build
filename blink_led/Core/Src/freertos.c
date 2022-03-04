@@ -114,6 +114,14 @@ void MX_FREERTOS_Init(void) {
   xTaskCreate(ledBlinkyTask1, "ledBlinkyTask1", 1024, (void *)&xTestStruct, osPriorityNormal, &xLedBlinkyHandle1);
   xTaskCreate(ledBlinkyTask2, "ledBlinkyTask2", 1024, (void *)&xTestStruct, osPriorityNormal1, &xLedBlinkyHandle2);
 
+  const char *pcNameToQuery = "ledBlinkyTask1";
+  TaskHandle_t xHandle;
+  xHandle =  xTaskGetHandle(pcNameToQuery);
+  if (xHandle != NULL) {
+      printf("There is a task named: %s \r\n", pcNameToQuery);
+  } else {
+      printf("There is not a task named: %s \r\n", pcNameToQuery);
+  }
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

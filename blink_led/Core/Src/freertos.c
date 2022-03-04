@@ -146,12 +146,13 @@ void ledBlinkyTask1(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   int count = 0;
+  eTaskState ledBlinkyTask2State = eNoAction;
   while (1) {
       osDelay(1000);
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
       count++;
       if(10 == count) {
-          eTaskState ledBlinkyTask2State = eTaskGetState(xLedBlinkyHandle2);
+          ledBlinkyTask2State = eTaskGetState(xLedBlinkyHandle2);
           if (ledBlinkyTask2State == eSuspended) {
               vTaskResume(xLedBlinkyHandle2);
           }
@@ -164,6 +165,7 @@ void ledBlinkyTask1(void * pvParameters) {
           }
           xTaskResumeAll();
       }
+      printf("xLedBlinkyHandle2 state: %d \r\n", ledBlinkyTask2State);
 
       UBaseType_t taskNum = uxTaskGetNumberOfTasks();
       printf("Current task num: %ld \r\n", taskNum);
@@ -177,10 +179,11 @@ void ledBlinkyTask1(void * pvParameters) {
       static char cBuffer[512] = {0};
       vTaskList(cBuffer);
       printf("---------------------------------------------\r\n");
-      printf("Name        State    Priority    Stack    Num\r\n");
+      printf("Name      State   Priority    Stack    Num\r\n");
+      printf("*********************************************\r\n");
+      printf("%s", cBuffer);
       printf("*********************************************\r\n");
 
-      printf("%s\r\n", cBuffer);
   }
   /* USER CODE END StartDefaultTask */
 }

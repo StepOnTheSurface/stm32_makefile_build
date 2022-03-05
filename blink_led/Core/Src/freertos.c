@@ -168,6 +168,14 @@ void StartDefaultTask(void *argument)
       UBaseType_t StartDefaultTaskWaterMark = uxTaskGetStackHighWaterMark(NULL);
       printf("StartDefaultTask high water mark: %ld \r\n", StartDefaultTaskWaterMark);
 
+      const char *name = "";
+      name = pcTaskGetName(xLedBlinkyHandle1);
+      printf("xLedBlinkyHandle1 task get name: %s \r\n", name); // task name string does not more than configMAX_TASK_NAME_LEN
+
+      name = pcTaskGetName(NULL);
+      printf("Current task get name: %s \r\n", name);
+
+
   }
   /* USER CODE END StartDefaultTask */
 }

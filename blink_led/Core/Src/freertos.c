@@ -143,7 +143,24 @@ void StartDefaultTask(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+      osDelay(1000);
+      BaseType_t shedulerState = xTaskGetSchedulerState();
+      switch (shedulerState) {
+          case taskSCHEDULER_SUSPENDED:
+              printf("Sheduler state: suspended \r\n");
+              break;
+
+          case taskSCHEDULER_NOT_STARTED:
+              printf("Sheduler state: not started \r\n");
+              break;
+
+          case taskSCHEDULER_RUNNING:
+              printf("Sheduler state: running \r\n");
+              break;
+
+          default:
+            break;
+      }
   }
   /* USER CODE END StartDefaultTask */
 }

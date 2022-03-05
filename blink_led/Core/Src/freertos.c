@@ -144,6 +144,9 @@ void StartDefaultTask(void *argument)
   for(;;)
   {
       osDelay(1000);
+      TickType_t tickCountStart = xTaskGetTickCount();
+      printf("Current tick count: %ld \r\n", tickCountStart);
+
       BaseType_t shedulerState = xTaskGetSchedulerState();
       switch (shedulerState) {
           case taskSCHEDULER_SUSPENDED:
@@ -175,6 +178,9 @@ void StartDefaultTask(void *argument)
       name = pcTaskGetName(NULL);
       printf("Current task get name: %s \r\n", name);
 
+      TickType_t tickCountEnd = xTaskGetTickCount();
+      printf("Current tick count: %ld \r\n", tickCountEnd);
+      printf("Running default task spend time: %ld ms \r\n", tickCountEnd - tickCountStart);
 
   }
   /* USER CODE END StartDefaultTask */

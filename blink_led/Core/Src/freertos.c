@@ -161,6 +161,13 @@ void StartDefaultTask(void *argument)
           default:
             break;
       }
+
+      UBaseType_t ledBlinkyHandle1WaterMark = uxTaskGetStackHighWaterMark(xLedBlinkyHandle1);
+      printf("ledBlinkyHandle1 high water mark: %ld \r\n", ledBlinkyHandle1WaterMark);
+
+      UBaseType_t StartDefaultTaskWaterMark = uxTaskGetStackHighWaterMark(NULL);
+      printf("StartDefaultTask high water mark: %ld \r\n", StartDefaultTaskWaterMark);
+
   }
   /* USER CODE END StartDefaultTask */
 }

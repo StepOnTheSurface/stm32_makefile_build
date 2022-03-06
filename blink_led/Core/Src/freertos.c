@@ -180,6 +180,13 @@ void StartDefaultTask(void *argument)
       printf("Current tick count: %ld \r\n", tickCountEnd);
       printf("Running default task spend time: %ld ms \r\n", tickCountEnd - tickCountStart);
 
+      long lReturnedTaskHandle;
+      lReturnedTaskHandle = ( long ) xTaskGetApplicationTaskTag(NULL);
+      printf("Current task tag: %ld \r\n", lReturnedTaskHandle);
+      if (lReturnedTaskHandle == NULL) {
+          vTaskSetApplicationTaskTag(NULL, (void *) 1);
+      }
+
       eTaskState ledBlinkyTask2State = eNoAction;
       ledBlinkyTask2State = eTaskGetState(xLedBlinkyHandle2);
       printf("xLedBlinkyHandle2 state: %d \r\n", ledBlinkyTask2State);

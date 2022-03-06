@@ -167,20 +167,33 @@ void StartDefaultTask(void *argument)
 
       UBaseType_t ledBlinkyHandle1WaterMark = uxTaskGetStackHighWaterMark(xLedBlinkyHandle1);
       printf("ledBlinkyHandle1 high water mark: %ld \r\n", ledBlinkyHandle1WaterMark);
-
       UBaseType_t StartDefaultTaskWaterMark = uxTaskGetStackHighWaterMark(NULL);
       printf("StartDefaultTask high water mark: %ld \r\n", StartDefaultTaskWaterMark);
 
       const char *name = "";
       name = pcTaskGetName(xLedBlinkyHandle1);
       printf("xLedBlinkyHandle1 task get name: %s \r\n", name); // task name string does not more than configMAX_TASK_NAME_LEN
-
       name = pcTaskGetName(NULL);
       printf("Current task get name: %s \r\n", name);
 
       TickType_t tickCountEnd = xTaskGetTickCount();
       printf("Current tick count: %ld \r\n", tickCountEnd);
       printf("Running default task spend time: %ld ms \r\n", tickCountEnd - tickCountStart);
+
+      eTaskState ledBlinkyTask2State = eNoAction;
+      ledBlinkyTask2State = eTaskGetState(xLedBlinkyHandle2);
+      printf("xLedBlinkyHandle2 state: %d \r\n", ledBlinkyTask2State);
+
+      UBaseType_t taskNum = uxTaskGetNumberOfTasks();
+      printf("Current task num: %ld \r\n", taskNum);
+
+      static char cBuffer[512] = {0};
+      vTaskList(cBuffer);
+      printf("---------------------------------------------\r\n");
+      printf("Name      State   Priority    Stack    Num\r\n");
+      printf("*********************************************\r\n");
+      printf("%s", cBuffer);
+      printf("*********************************************\r\n");
 
   }
   /* USER CODE END StartDefaultTask */
@@ -192,16 +205,12 @@ void ledBlinkyTask1(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
   int count = 0;
-  eTaskState ledBlinkyTask2State = eNoAction;
   while (1) {
       osDelay(1000);
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
       count++;
       if(10 == count) {
-          ledBlinkyTask2State = eTaskGetState(xLedBlinkyHandle2);
-          if (ledBlinkyTask2State == eSuspended) {
-              vTaskResume(xLedBlinkyHandle2);
-          }
+          vTaskResume(xLedBlinkyHandle2);
       } else if (15 == count) {
           vTaskSuspendAll();
           // Noted: Other FreeRTOS API functions should not be called while the scheduler is suspended.
@@ -211,25 +220,6 @@ void ledBlinkyTask1(void * pvParameters) {
           }
           xTaskResumeAll();
       }
-      printf("xLedBlinkyHandle2 state: %d \r\n", ledBlinkyTask2State);
-
-      UBaseType_t taskNum = uxTaskGetNumberOfTasks();
-      printf("Current task num: %ld \r\n", taskNum);
-      if (5 == taskNum) { // StartDefaultTask, ledBlinkyTask1, ledBlinkyTask2...
-          for (int i = 0; i < 6; i++) {
-              HAL_Delay(300);
-              HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
-          }
-      }
-
-      static char cBuffer[512] = {0};
-      vTaskList(cBuffer);
-      printf("---------------------------------------------\r\n");
-      printf("Name      State   Priority    Stack    Num\r\n");
-      printf("*********************************************\r\n");
-      printf("%s", cBuffer);
-      printf("*********************************************\r\n");
-
   }
   /* USER CODE END StartDefaultTask */
 }

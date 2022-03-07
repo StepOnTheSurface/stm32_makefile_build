@@ -18,11 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
+#include "usart.h"
 #include "gpio.h"
-#include "stdio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
 
 /* USER CODE END Includes */
 
@@ -48,21 +50,35 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+#ifdef __GNUC__
+/* With GCC, small printf (option LD Linker->Libraries->Small printf
+   set to 'Yes') calls __io_putchar() */
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+
+PUTCHAR_PROTOTYPE {
+	HAL_UART_Transmit(&huart4, (uint8_t *)&ch, 1, 0xFFFF);
+	return ch;
+}
+
 int _write(int file, char *ptr, int len)
 {
     /* Implement your write code here, this is used by puts and printf for example */
     int i=0;
     for(i=0 ; i<len ; i++)
-        ITM_SendChar((*ptr++));
+        // ITM_SendChar((*ptr++));
+        __io_putchar(*ptr++);
     return len;
 }
-
 /* USER CODE END 0 */
 
 /**
@@ -93,10 +109,18 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
 
+  /* Init scheduler */
+  osKernelInitialize();  /* Call init function for freertos objects (in freertos.c) */
+  MX_FREERTOS_Init();
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
@@ -107,6 +131,7 @@ int main(void)
       HAL_Delay(1000);
       static uint32_t count = 0;
       printf("LED has been toggled count: %ld \r\n", count++);
+      printf("Hello");
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LD3, and LD4
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin);
   }

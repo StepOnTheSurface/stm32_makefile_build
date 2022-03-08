@@ -214,19 +214,10 @@ void ledBlinkyTask1(void * pvParameters) {
   int count = 0;
   while (1) {
       osDelay(1000);
+      printf("--------------------\r\n");
+      printf("Task1 wait notification \r\n");
+      ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
       HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
-      count++;
-      if(10 == count) {
-          vTaskResume(xLedBlinkyHandle2);
-      } else if (15 == count) {
-          vTaskSuspendAll();
-          // Noted: Other FreeRTOS API functions should not be called while the scheduler is suspended.
-          for (int i = 0; i < 5; i++) {
-              HAL_Delay(1000);
-              HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
-          }
-          xTaskResumeAll();
-      }
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -236,12 +227,11 @@ void ledBlinkyTask2(void * pvParameters) {
   /* Infinite loop */
   int count = 0;
   while (1) {
-      osDelay(1000);
+      osDelay(2000);
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin); // Toggle LED4
-      count++;
-      if (6 == count) {
-          vTaskSuspend(NULL);
-      }
+      printf("--------------------\r\n");
+      printf("Task2 notify taks1 \r\n");
+      xTaskNotifyGive(xLedBlinkyHandle1);
   }
   /* USER CODE END StartDefaultTask */
 }

@@ -246,7 +246,8 @@ void ledBlinkyTask2(void * pvParameters) {
       printf("--------------------\r\n");
       printf("Task2 notify taks1 \r\n");
       // xTaskNotifyGive(xLedBlinkyHandle1);
-      if (xTaskNotify(xLedBlinkyHandle1, 0x02, eSetValueWithOverwrite) == pdPASS) {
+      // if (xTaskNotify(xLedBlinkyHandle1, 0x02, eSetValueWithOverwrite) == pdPASS) {
+      if (xTaskNotifyAndQuery( xLedBlinkyHandle1, ( 1UL << 2UL ), eSetBits, NULL ) == pdPASS) {
           printf("Task2 notify taks1 value was updated \r\n");
       } else {
           printf("Task2 notify taks1 value was not updated \r\n");

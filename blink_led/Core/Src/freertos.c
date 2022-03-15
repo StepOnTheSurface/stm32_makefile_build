@@ -52,7 +52,7 @@
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 128 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
@@ -211,22 +211,28 @@ void StartDefaultTask(void *argument)
 void ledBlinkyTask1(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  int count = 0;
   while (1) {
       osDelay(1000);
-      HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
-      count++;
-      if(10 == count) {
-          vTaskResume(xLedBlinkyHandle2);
-      } else if (15 == count) {
-          vTaskSuspendAll();
-          // Noted: Other FreeRTOS API functions should not be called while the scheduler is suspended.
-          for (int i = 0; i < 5; i++) {
-              HAL_Delay(1000);
-              HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
-          }
-          xTaskResumeAll();
+      printf("--------------------\r\n");
+      printf("Task1 wait notification \r\n");
+      // ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+      uint32_t ulNotifiedValue;
+      xTaskNotifyWait(0x00, /* Don't clear any notification bits on entry. */
+                      0xffffffffUL, /* Reset the notification value to 0 on exit. */
+                      &ulNotifiedValue, /* Notified value pass out in ulNotifiedValue. */
+                      portMAX_DELAY); /* Block indefinitely. */
+      /* Process any events that have been latched in the notified value. */
+      if( ( ulNotifiedValue & 0x01 ) != 0 ) {
+          /* Bit 0 was set - process whichever event is represented by bit 0. */
+          printf("Bit 0 was set \r\n");
+      } else if( ( ulNotifiedValue & 0x02 ) != 0 ) {
+          /* Bit 1 was set - process whichever event is represented by bit 1. */
+          printf("Bit 1 was set \r\n");
+      } else if( ( ulNotifiedValue & 0x04 ) != 0 ) {
+          /* Bit 2 was set - process whichever event is represented by bit 2. */
+          printf("Bit 2 was set \r\n");
       }
+      HAL_GPIO_TogglePin(GPIOG, LED3_Pin); // Toggle LED3
   }
   /* USER CODE END StartDefaultTask */
 }
@@ -234,13 +240,17 @@ void ledBlinkyTask1(void * pvParameters) {
 void ledBlinkyTask2(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
-  int count = 0;
   while (1) {
-      osDelay(1000);
+      osDelay(2000);
 	    HAL_GPIO_TogglePin(GPIOG, LED4_Pin); // Toggle LED4
-      count++;
-      if (6 == count) {
-          vTaskSuspend(NULL);
+      printf("--------------------\r\n");
+      printf("Task2 notify taks1 \r\n");
+      // xTaskNotifyGive(xLedBlinkyHandle1);
+      // if (xTaskNotify(xLedBlinkyHandle1, 0x02, eSetValueWithOverwrite) == pdPASS) {
+      if (xTaskNotifyAndQuery( xLedBlinkyHandle1, ( 1UL << 2UL ), eSetBits, NULL ) == pdPASS) {
+          printf("Task2 notify taks1 value was updated \r\n");
+      } else {
+          printf("Task2 notify taks1 value was not updated \r\n");
       }
   }
   /* USER CODE END StartDefaultTask */

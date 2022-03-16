@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 #include "main.h"
 #include "cmsis_os.h"
 
@@ -109,6 +110,13 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
+  QueueHandle_t qHandele;
+  qHandele = xQueueCreate(5, sizeof(int));
+  if (qHandele != NULL) {
+      printf("Create queue successfully \r\n");
+  } else {
+      printf("Create queue failed \r\n");
+  }
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   xTaskCreate(ledBlinkyTask1, "ledBlinkyTask1", 1024, (void *)&xTestStruct, osPriorityNormal, &xLedBlinkyHandle1);

@@ -69,7 +69,10 @@ xTestTaskStruct xTestStruct = {
     10,
     "TestTask"
   };
-
+TaskHandle_t  xsendTaskHandle;
+TaskHandle_t  xrecTaskHandle;
+void sendTask(void * pvParameters);
+void recTask(void * pvParameters);
 TaskHandle_t xLedBlinkyHandle1;
 TaskHandle_t xLedBlinkyHandle2;
 void ledBlinkyTask1(void * pvParameters);
@@ -104,15 +107,18 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+  QueueHandle_t qHandele;
+
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  QueueHandle_t qHandele;
   qHandele = xQueueCreate(5, sizeof(int));
   if (qHandele != NULL) {
+      xTaskCreate(sendTask, "sendTask", 512, (void *)&qHandele, osPriorityNormal, &xsendTaskHandle);
+      xTaskCreate(recTask, "recTask", 512, (void *)&qHandele, osPriorityNormal, &xrecTaskHandle);
       printf("Create queue successfully \r\n");
   } else {
       printf("Create queue failed \r\n");
@@ -216,6 +222,40 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
+void sendTask(void * pvParameters) {
+    QueueHandle_t qHandele;
+    qHandele = (QueueHandle_t) pvParameters;
+    BaseType_t xQueueSendStatus;
+    int i = 0;
+    while (1) {
+        osDelay(1000);
+        xQueueSendStatus = xQueueSend(qHandele, &i, 10);
+        if (xQueueSendStatus == pdPASS) {
+            printf("Queue send i = %d done \r\n", i);
+        } else {
+            printf("Queue send fail \r\n");
+        }
+        i++;
+    }
+}
+
+void recTask(void * pvParameters) {
+    QueueHandle_t qHandele;
+    qHandele = (QueueHandle_t) pvParameters;
+    BaseType_t xQueueRecStatus;
+    int j = 0;
+    while (1) {
+        osDelay(1000);
+        xQueueRecStatus = xQueueReceive(qHandele, &j, 10);
+        if (xQueueRecStatus == pdPASS) {
+            printf("Queue receive j = %d done \r\n", j);
+        } else {
+            printf("Queue receive fail \r\n");
+        }
+    }
+}
+
 void ledBlinkyTask1(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */

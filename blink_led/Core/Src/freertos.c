@@ -243,11 +243,18 @@ void recTask(void * pvParameters) {
     int j = 0;
     while (1) {
         osDelay(1000);
-        xQueueRecStatus = xQueueReceive(xqueueHandle, &j, 10);
-        if (xQueueRecStatus == pdPASS) {
-            printf("Queue receive j = %d done \r\n", j);
+        UBaseType_t uxNumberOfItems;
+        uxNumberOfItems = uxQueueMessagesWaiting(xqueueHandle);
+        printf("Queue messages %ld \r\n", uxNumberOfItems);
+        if (uxNumberOfItems > 0) {
+            xQueueRecStatus = xQueueReceive(xqueueHandle, &j, 10);
+            if (xQueueRecStatus == pdPASS) {
+                printf("Queue receive j = %d done \r\n", j);
+            } else {
+                printf("Queue receive fail \r\n");
+            }
         } else {
-            printf("Queue receive fail \r\n");
+            printf("Queue is empty \r\n");
         }
     }
 }

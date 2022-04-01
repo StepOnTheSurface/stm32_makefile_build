@@ -71,7 +71,7 @@ xTestTaskStruct xTestStruct = {
   };
 TaskHandle_t  xsendTaskHandle;
 TaskHandle_t  xrecTaskHandle;
-QueueHandle_t xqueueHandle;
+
 void sendTask(void * pvParameters);
 void recTask(void * pvParameters);
 TaskHandle_t xLedBlinkyHandle1;
@@ -115,10 +115,11 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
+  QueueHandle_t xqueueHandle;
   xqueueHandle = xQueueCreate(5, sizeof(int));
   if (xqueueHandle != NULL) {
-      xTaskCreate(sendTask, "sendTask", 512, (void *)&xqueueHandle, osPriorityNormal, &xsendTaskHandle);
-      xTaskCreate(recTask, "recTask", 512, (void *)&xqueueHandle, osPriorityNormal, &xrecTaskHandle);
+      xTaskCreate(sendTask, "sendTask", 512, (void *)xqueueHandle, osPriorityNormal, &xsendTaskHandle);
+      xTaskCreate(recTask, "recTask", 512, (void *)xqueueHandle, osPriorityNormal, &xrecTaskHandle);
       printf("Create queue successfully \r\n");
   } else {
       printf("Create queue failed \r\n");
@@ -224,11 +225,13 @@ void StartDefaultTask(void *argument)
 /* USER CODE BEGIN Application */
 
 void sendTask(void * pvParameters) {
+    QueueHandle_t qSendHandle;
+    qSendHandle = (QueueHandle_t)pvParameters;
     BaseType_t xQueueSendStatus;
     int i = 0;
     while (1) {
         osDelay(1000);
-        xQueueSendStatus = xQueueSend(xqueueHandle, &i, 10);
+        xQueueSendStatus = xQueueSend(qSendHandle, &i, 10);
         if (xQueueSendStatus == pdPASS) {
             printf("Queue send i = %d done \r\n", i);
         } else {
@@ -240,14 +243,16 @@ void sendTask(void * pvParameters) {
 
 void recTask(void * pvParameters) {
     BaseType_t xQueueRecStatus;
+    QueueHandle_t qRecHandle;
+    qRecHandle = (QueueHandle_t)pvParameters;
     int j = 0;
     while (1) {
         osDelay(1000);
         UBaseType_t uxNumberOfItems;
-        uxNumberOfItems = uxQueueMessagesWaiting(xqueueHandle);
+        uxNumberOfItems = uxQueueMessagesWaiting(qRecHandle);
         printf("Queue messages %ld \r\n", uxNumberOfItems);
         if (uxNumberOfItems > 0) {
-            xQueueRecStatus = xQueueReceive(xqueueHandle, &j, 10);
+            xQueueRecStatus = xQueueReceive(qRecHandle, &j, 10);
             if (xQueueRecStatus == pdPASS) {
                 printf("Queue receive j = %d done \r\n", j);
             } else {

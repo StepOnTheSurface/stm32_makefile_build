@@ -48,6 +48,11 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 
+typedef struct qMessageSturct {
+    int id;
+    char data;
+} qMesStruct;
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -116,7 +121,7 @@ void MX_FREERTOS_Init(void) {
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   QueueHandle_t xqueueHandle;
-  xqueueHandle = xQueueCreate(5, sizeof(int));
+  xqueueHandle = xQueueCreate(5, sizeof(qMesStruct));
   if (xqueueHandle != NULL) {
       xTaskCreate(sendTask, "sendTask", 512, (void *)xqueueHandle, osPriorityNormal, &xsendTaskHandle);
       xTaskCreate(recTask, "recTask", 512, (void *)xqueueHandle, osPriorityNormal, &xrecTaskHandle);
@@ -228,16 +233,17 @@ void sendTask(void * pvParameters) {
     QueueHandle_t qSendHandle;
     qSendHandle = (QueueHandle_t)pvParameters;
     BaseType_t xQueueSendStatus;
-    int i = 0;
+    qMesStruct qSendUSB = {1, 55};
     while (1) {
         osDelay(1000);
-        xQueueSendStatus = xQueueSend(qSendHandle, &i, 10);
+        xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
         if (xQueueSendStatus == pdPASS) {
-            printf("Queue send i = %d done \r\n", i);
+            printf("Queue send qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
+            qSendUSB.id++;
+            qSendUSB.data++;
         } else {
             printf("Queue send fail \r\n");
         }
-        i++;
     }
 }
 
@@ -245,16 +251,16 @@ void recTask(void * pvParameters) {
     BaseType_t xQueueRecStatus;
     QueueHandle_t qRecHandle;
     qRecHandle = (QueueHandle_t)pvParameters;
-    int j = 0;
+    qMesStruct qRecUSB = {0, 0};
     while (1) {
         osDelay(1000);
         UBaseType_t uxNumberOfItems;
         uxNumberOfItems = uxQueueMessagesWaiting(qRecHandle);
         printf("Queue messages %ld \r\n", uxNumberOfItems);
         if (uxNumberOfItems > 0) {
-            xQueueRecStatus = xQueueReceive(qRecHandle, &j, 10);
+            xQueueRecStatus = xQueueReceive(qRecHandle, &qRecUSB, 10);
             if (xQueueRecStatus == pdPASS) {
-                printf("Queue receive j = %d done \r\n", j);
+                printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);
             } else {
                 printf("Queue receive fail \r\n");
             }

@@ -74,10 +74,12 @@ xTestTaskStruct xTestStruct = {
     10,
     "TestTask"
   };
-TaskHandle_t  xsendTaskHandle;
+TaskHandle_t  xsendTaskHandle1;
+TaskHandle_t  xsendTaskHandle2;
 TaskHandle_t  xrecTaskHandle;
 
-void sendTask(void * pvParameters);
+void sendTask1(void * pvParameters);
+void sendTask2(void * pvParameters);
 void recTask(void * pvParameters);
 TaskHandle_t xLedBlinkyHandle1;
 TaskHandle_t xLedBlinkyHandle2;
@@ -123,8 +125,9 @@ void MX_FREERTOS_Init(void) {
   QueueHandle_t xqueueHandle;
   xqueueHandle = xQueueCreate(5, sizeof(qMesStruct));
   if (xqueueHandle != NULL) {
-      xTaskCreate(sendTask, "sendTask", 512, (void *)xqueueHandle, osPriorityNormal, &xsendTaskHandle);
-      xTaskCreate(recTask, "recTask", 512, (void *)xqueueHandle, osPriorityNormal, &xrecTaskHandle);
+      xTaskCreate(sendTask1, "sendTask1", 512, (void *)xqueueHandle, osPriorityNormal, &xsendTaskHandle1);
+      xTaskCreate(sendTask2, "sendTask2", 512, (void *)xqueueHandle, osPriorityNormal, &xsendTaskHandle2);
+      xTaskCreate(recTask, "recTask", 512, (void *)xqueueHandle, osPriorityNormal1, &xrecTaskHandle);
       printf("Create queue successfully \r\n");
   } else {
       printf("Create queue failed \r\n");
@@ -229,7 +232,7 @@ void StartDefaultTask(void *argument)
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
-void sendTask(void * pvParameters) {
+void sendTask1(void * pvParameters) {
     QueueHandle_t qSendHandle;
     qSendHandle = (QueueHandle_t)pvParameters;
     BaseType_t xQueueSendStatus;
@@ -238,8 +241,25 @@ void sendTask(void * pvParameters) {
         osDelay(1000);
         xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
         if (xQueueSendStatus == pdPASS) {
-            printf("Queue send qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
-            qSendUSB.id++;
+            printf("Queue sendTask1 qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
+            qSendUSB.data++;
+        } else {
+            printf("Queue send fail \r\n");
+        }
+    }
+}
+
+
+void sendTask2(void * pvParameters) {
+    QueueHandle_t qSendHandle;
+    qSendHandle = (QueueHandle_t)pvParameters;
+    BaseType_t xQueueSendStatus;
+    qMesStruct qSendUSB = {2, 22};
+    while (1) {
+        osDelay(1000);
+        xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
+        if (xQueueSendStatus == pdPASS) {
+            printf("Queue sendTask2 qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
             qSendUSB.data++;
         } else {
             printf("Queue send fail \r\n");
@@ -253,19 +273,12 @@ void recTask(void * pvParameters) {
     qRecHandle = (QueueHandle_t)pvParameters;
     qMesStruct qRecUSB = {0, 0};
     while (1) {
-        osDelay(1000);
-        UBaseType_t uxNumberOfItems;
-        uxNumberOfItems = uxQueueMessagesWaiting(qRecHandle);
-        printf("Queue messages %ld \r\n", uxNumberOfItems);
-        if (uxNumberOfItems > 0) {
-            xQueueRecStatus = xQueueReceive(qRecHandle, &qRecUSB, 10);
-            if (xQueueRecStatus == pdPASS) {
-                printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);
-            } else {
-                printf("Queue receive fail \r\n");
-            }
+        osDelay(100);
+        xQueueRecStatus = xQueueReceive(qRecHandle, &qRecUSB, portMAX_DELAY);
+        if (xQueueRecStatus == pdPASS) {
+            printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);
         } else {
-            printf("Queue is empty \r\n");
+            printf("Queue receive fail \r\n");
         }
     }
 }

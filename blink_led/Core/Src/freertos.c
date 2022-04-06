@@ -238,7 +238,7 @@ void sendTask1(void * pvParameters) {
     BaseType_t xQueueSendStatus;
     qMesStruct qSendUSB = {1, 55};
     while (1) {
-        osDelay(1000);
+        osDelay(2000);
         xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
         if (xQueueSendStatus == pdPASS) {
             printf("Queue sendTask1 qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
@@ -256,7 +256,7 @@ void sendTask2(void * pvParameters) {
     BaseType_t xQueueSendStatus;
     qMesStruct qSendUSB = {2, 22};
     while (1) {
-        osDelay(1000);
+        osDelay(2000);
         xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
         if (xQueueSendStatus == pdPASS) {
             printf("Queue sendTask2 qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
@@ -273,7 +273,6 @@ void recTask(void * pvParameters) {
     qRecHandle = (QueueHandle_t)pvParameters;
     qMesStruct qRecUSB = {0, 0};
     while (1) {
-        osDelay(100);
         xQueueRecStatus = xQueueReceive(qRecHandle, &qRecUSB, portMAX_DELAY);
         if (xQueueRecStatus == pdPASS) {
             printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);

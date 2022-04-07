@@ -122,12 +122,24 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  QueueHandle_t xqueueHandle;
-  xqueueHandle = xQueueCreate(5, sizeof(qMesStruct));
-  if (xqueueHandle != NULL) {
-      xTaskCreate(sendTask1, "sendTask1", 512, (void *)xqueueHandle, osPriorityNormal, &xsendTaskHandle1);
-      xTaskCreate(sendTask2, "sendTask2", 512, (void *)xqueueHandle, osPriorityNormal, &xsendTaskHandle2);
-      xTaskCreate(recTask, "recTask", 512, (void *)xqueueHandle, osPriorityNormal1, &xrecTaskHandle);
+  QueueHandle_t xqueueHandle1;
+  xqueueHandle1 = xQueueCreate(5, sizeof(qMesStruct));
+
+  QueueHandle_t xqueueHandle2;
+  xqueueHandle2 = xQueueCreate(5, sizeof(qMesStruct));
+
+  QueueSetHandle_t xqueueSetHandle;
+  xqueueSetHandle = xQueueCreateSet(10);
+
+  BaseType_t xQHandle1AddStatus;
+  BaseType_t xQHandle2AddStatus;
+  xQHandle1AddStatus = xQueueAddToSet(xqueueHandle1, xqueueSetHandle);
+  xQHandle2AddStatus = xQueueAddToSet(xqueueHandle2, xqueueSetHandle);
+
+  if (xqueueHandle1 != NULL && xqueueHandle1 != NULL && xqueueSetHandle != NULL && xQHandle1AddStatus != pdFAIL && xQHandle2AddStatus != pdFAIL) {
+      xTaskCreate(sendTask1, "sendTask1", 512, (void *)xqueueHandle1, osPriorityNormal, &xsendTaskHandle1);
+      xTaskCreate(sendTask2, "sendTask2", 512, (void *)xqueueHandle2, osPriorityNormal, &xsendTaskHandle2);
+      xTaskCreate(recTask, "recTask", 512, (void *)xqueueSetHandle, osPriorityNormal1, &xrecTaskHandle);
       printf("Create queue successfully \r\n");
   } else {
       printf("Create queue failed \r\n");
@@ -236,7 +248,7 @@ void sendTask1(void * pvParameters) {
     QueueHandle_t qSendHandle;
     qSendHandle = (QueueHandle_t)pvParameters;
     BaseType_t xQueueSendStatus;
-    qMesStruct qSendUSB = {1, 55};
+    qMesStruct qSendUSB = {1, 11};
     while (1) {
         osDelay(2000);
         xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
@@ -269,15 +281,21 @@ void sendTask2(void * pvParameters) {
 
 void recTask(void * pvParameters) {
     BaseType_t xQueueRecStatus;
-    QueueHandle_t qRecHandle;
-    qRecHandle = (QueueHandle_t)pvParameters;
+    QueueSetHandle_t qSetRecHandle;
+    qSetRecHandle = (QueueSetHandle_t)pvParameters;
+    QueueSetMemberHandle_t qSetDataHandle;
     qMesStruct qRecUSB = {0, 0};
     while (1) {
-        xQueueRecStatus = xQueueReceive(qRecHandle, &qRecUSB, portMAX_DELAY);
-        if (xQueueRecStatus == pdPASS) {
-            printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);
+        qSetDataHandle = xQueueSelectFromSet(qSetRecHandle, portMAX_DELAY);
+        if (qSetDataHandle != NULL) {
+            xQueueRecStatus = xQueueReceive(qSetDataHandle, &qRecUSB, portMAX_DELAY);
+            if (xQueueRecStatus == pdPASS) {
+                printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);
+            } else {
+                printf("Queue receive fail \r\n");
+            }
         } else {
-            printf("Queue receive fail \r\n");
+            printf("Queue set not become available \r\n");
         }
     }
 }

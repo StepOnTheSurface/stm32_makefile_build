@@ -284,10 +284,13 @@ void recTask(void * pvParameters) {
     QueueSetHandle_t qSetRecHandle;
     qSetRecHandle = (QueueSetHandle_t)pvParameters;
     QueueSetMemberHandle_t qSetDataHandle;
+    UBaseType_t uxNumberOfFreeSpaces;
     qMesStruct qRecUSB = {0, 0};
     while (1) {
         qSetDataHandle = xQueueSelectFromSet(qSetRecHandle, portMAX_DELAY);
+        uxNumberOfFreeSpaces = uxQueueSpacesAvailable(qSetDataHandle);
         if (qSetDataHandle != NULL) {
+            printf("Queue number of free spaces: %d \r\n", uxNumberOfFreeSpaces);
             xQueueRecStatus = xQueueReceive(qSetDataHandle, &qRecUSB, portMAX_DELAY);
             if (xQueueRecStatus == pdPASS) {
                 printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);

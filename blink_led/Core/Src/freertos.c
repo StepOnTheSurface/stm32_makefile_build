@@ -79,12 +79,14 @@ TaskHandle_t  xsendTaskHandle2;
 TaskHandle_t  xrecTaskHandle;
 TaskHandle_t  xwriteTaskHandle;
 TaskHandle_t  xreadTaskHandle;
+TaskHandle_t  xreadTaskHandle2;
 
 void sendTask1(void * pvParameters);
 void sendTask2(void * pvParameters);
 void recTask(void * pvParameters);
 void writeTask (void * pvParameters);
-void readTask (void * pvParameters);
+void readTask(void * pvParameters);
+void readTask2(void * pvParameters);
 TaskHandle_t xLedBlinkyHandle1;
 TaskHandle_t xLedBlinkyHandle2;
 void ledBlinkyTask1(void * pvParameters);
@@ -147,8 +149,10 @@ void MX_FREERTOS_Init(void) {
       xTaskCreate(sendTask1, "sendTask1", 512, (void *)xqueueHandle1, osPriorityNormal, &xsendTaskHandle1);
       xTaskCreate(sendTask2, "sendTask2", 512, (void *)xqueueHandle2, osPriorityNormal, &xsendTaskHandle2);
       xTaskCreate(recTask, "recTask", 512, (void *)xqueueSetHandle, osPriorityNormal1, &xrecTaskHandle);
+
       xTaskCreate(writeTask, "writeTask", 512, (void *)xMailboxHandle, osPriorityNormal, &xwriteTaskHandle);
       xTaskCreate(readTask, "readTask", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadTaskHandle);
+      xTaskCreate(readTask2, "readTask2", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadTaskHandle2);
       printf("Create queue successfully \r\n");
   } else {
       printf("Create queue failed \r\n");
@@ -339,7 +343,23 @@ void readTask(void * pvParameters) {
         if (xReadStatus != pdPASS) {
             printf("Read mail box data fail \r\n");
         } else {
-            printf("Read mail box id %d; data: %d \r\n", qMailboxData.id, qMailboxData.data);
+            printf("Read task1 mail box id %d; data: %d \r\n", qMailboxData.id, qMailboxData.data);
+        }
+        osDelay(3000);
+    }
+}
+
+void readTask2(void * pvParameters) {
+    QueueHandle_t qMailboxReadHandle;
+    qMailboxReadHandle = (QueueHandle_t)pvParameters;
+    BaseType_t xReadStatus;
+    qMesStruct qMailboxData = {0, 0};
+    while (1) {
+        xReadStatus = xQueuePeek(qMailboxReadHandle, &qMailboxData, portMAX_DELAY);
+        if (xReadStatus != pdPASS) {
+            printf("Read task2 mail box data fail \r\n");
+        } else {
+            printf("Read task2 mail box id %d; data: %d \r\n", qMailboxData.id, qMailboxData.data);
         }
         osDelay(3000);
     }

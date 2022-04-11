@@ -77,16 +77,16 @@ xTestTaskStruct xTestStruct = {
 TaskHandle_t  xsendTaskHandle1;
 TaskHandle_t  xsendTaskHandle2;
 TaskHandle_t  xrecTaskHandle;
-TaskHandle_t  xwriteTaskHandle;
-TaskHandle_t  xreadTaskHandle;
-TaskHandle_t  xreadTaskHandle2;
+TaskHandle_t  xwriteMailboxTaskHandle;
+TaskHandle_t  xreadMailboxTaskHandle1;
+TaskHandle_t  xreadMailboxTaskHandle2;
 
 void sendTask1(void * pvParameters);
 void sendTask2(void * pvParameters);
 void recTask(void * pvParameters);
-void writeTask (void * pvParameters);
-void readTask(void * pvParameters);
-void readTask2(void * pvParameters);
+void writeMailboxTask (void * pvParameters);
+void readMailboxTask1(void * pvParameters);
+void readMailboxTask2(void * pvParameters);
 TaskHandle_t xLedBlinkyHandle1;
 TaskHandle_t xLedBlinkyHandle2;
 void ledBlinkyTask1(void * pvParameters);
@@ -150,9 +150,9 @@ void MX_FREERTOS_Init(void) {
       xTaskCreate(sendTask2, "sendTask2", 512, (void *)xqueueHandle2, osPriorityNormal, &xsendTaskHandle2);
       xTaskCreate(recTask, "recTask", 512, (void *)xqueueSetHandle, osPriorityNormal1, &xrecTaskHandle);
 
-      xTaskCreate(writeTask, "writeTask", 512, (void *)xMailboxHandle, osPriorityNormal, &xwriteTaskHandle);
-      xTaskCreate(readTask, "readTask", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadTaskHandle);
-      xTaskCreate(readTask2, "readTask2", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadTaskHandle2);
+      xTaskCreate(writeMailboxTask, "writeMailboxTask", 512, (void *)xMailboxHandle, osPriorityNormal, &xwriteMailboxTaskHandle);
+      xTaskCreate(readMailboxTask1, "readMailboxTask1", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadMailboxTaskHandle1);
+      xTaskCreate(readMailboxTask2, "readMailboxTask2", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadMailboxTaskHandle2);
       printf("Create queue successfully \r\n");
   } else {
       printf("Create queue failed \r\n");
@@ -303,7 +303,7 @@ void recTask(void * pvParameters) {
         qSetDataHandle = xQueueSelectFromSet(qSetRecHandle, portMAX_DELAY);
         uxNumberOfFreeSpaces = uxQueueSpacesAvailable(qSetDataHandle);
         if (qSetDataHandle != NULL) {
-            printf("Queue number of free spaces: %d \r\n", uxNumberOfFreeSpaces);
+            printf("Queue number of free spaces: %ld \r\n", uxNumberOfFreeSpaces);
             xQueueRecStatus = xQueueReceive(qSetDataHandle, &qRecUSB, portMAX_DELAY);
             if (xQueueRecStatus == pdPASS) {
                 printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);
@@ -316,7 +316,7 @@ void recTask(void * pvParameters) {
     }
 }
 
-void writeTask (void * pvParameters) {
+void writeMailboxTask(void * pvParameters) {
     QueueHandle_t qWriteMailboxHandle;
     qWriteMailboxHandle = (QueueHandle_t)pvParameters;
     BaseType_t xWriteStatus;
@@ -333,7 +333,7 @@ void writeTask (void * pvParameters) {
     }
 }
 
-void readTask(void * pvParameters) {
+void readMailboxTask1(void * pvParameters) {
     QueueHandle_t qMailboxReadHandle;
     qMailboxReadHandle = (QueueHandle_t)pvParameters;
     BaseType_t xReadStatus;
@@ -349,7 +349,7 @@ void readTask(void * pvParameters) {
     }
 }
 
-void readTask2(void * pvParameters) {
+void readMailboxTask2(void * pvParameters) {
     QueueHandle_t qMailboxReadHandle;
     qMailboxReadHandle = (QueueHandle_t)pvParameters;
     BaseType_t xReadStatus;

@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 #include "main.h"
 #include "cmsis_os.h"
 
@@ -47,6 +48,11 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 
+typedef struct qMessageSturct {
+    int id;
+    char data;
+} qMesStruct;
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -68,7 +74,19 @@ xTestTaskStruct xTestStruct = {
     10,
     "TestTask"
   };
+TaskHandle_t  xsendTaskHandle1;
+TaskHandle_t  xsendTaskHandle2;
+TaskHandle_t  xrecTaskHandle;
+TaskHandle_t  xwriteMailboxTaskHandle;
+TaskHandle_t  xreadMailboxTaskHandle1;
+TaskHandle_t  xreadMailboxTaskHandle2;
 
+void sendTask1(void * pvParameters);
+void sendTask2(void * pvParameters);
+void recTask(void * pvParameters);
+void writeMailboxTask (void * pvParameters);
+void readMailboxTask1(void * pvParameters);
+void readMailboxTask2(void * pvParameters);
 TaskHandle_t xLedBlinkyHandle1;
 TaskHandle_t xLedBlinkyHandle2;
 void ledBlinkyTask1(void * pvParameters);
@@ -103,12 +121,42 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
+
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
+  QueueHandle_t xqueueHandle1;
+  xqueueHandle1 = xQueueCreate(5, sizeof(qMesStruct));
+
+  QueueHandle_t xqueueHandle2;
+  xqueueHandle2 = xQueueCreate(5, sizeof(qMesStruct));
+
+  QueueHandle_t xMailboxHandle;
+  xMailboxHandle = xQueueCreate(1, sizeof(qMesStruct)); // create a mailbox, note: mailbox just has a length of one
+
+  QueueSetHandle_t xqueueSetHandle;
+  xqueueSetHandle = xQueueCreateSet(10);
+
+  BaseType_t xQHandle1AddStatus;
+  BaseType_t xQHandle2AddStatus;
+  xQHandle1AddStatus = xQueueAddToSet(xqueueHandle1, xqueueSetHandle);
+  xQHandle2AddStatus = xQueueAddToSet(xqueueHandle2, xqueueSetHandle);
+
+  if (xqueueHandle1 != NULL && xqueueHandle1 != NULL && xqueueSetHandle != NULL && xMailboxHandle != NULL && xQHandle1AddStatus != pdFAIL && xQHandle2AddStatus != pdFAIL) {
+      xTaskCreate(sendTask1, "sendTask1", 512, (void *)xqueueHandle1, osPriorityNormal, &xsendTaskHandle1);
+      xTaskCreate(sendTask2, "sendTask2", 512, (void *)xqueueHandle2, osPriorityNormal, &xsendTaskHandle2);
+      xTaskCreate(recTask, "recTask", 512, (void *)xqueueSetHandle, osPriorityNormal1, &xrecTaskHandle);
+
+      xTaskCreate(writeMailboxTask, "writeMailboxTask", 512, (void *)xMailboxHandle, osPriorityNormal, &xwriteMailboxTaskHandle);
+      xTaskCreate(readMailboxTask1, "readMailboxTask1", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadMailboxTaskHandle1);
+      xTaskCreate(readMailboxTask2, "readMailboxTask2", 512, (void *)xMailboxHandle, osPriorityNormal1, &xreadMailboxTaskHandle2);
+      printf("Create queue successfully \r\n");
+  } else {
+      printf("Create queue failed \r\n");
+  }
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   xTaskCreate(ledBlinkyTask1, "ledBlinkyTask1", 1024, (void *)&xTestStruct, osPriorityNormal, &xLedBlinkyHandle1);
@@ -208,6 +256,115 @@ void StartDefaultTask(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+
+void sendTask1(void * pvParameters) {
+    QueueHandle_t qSendHandle;
+    qSendHandle = (QueueHandle_t)pvParameters;
+    BaseType_t xQueueSendStatus;
+    qMesStruct qSendUSB = {1, 11};
+    while (1) {
+        osDelay(2000);
+        xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
+        if (xQueueSendStatus == pdPASS) {
+            printf("Queue sendTask1 qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
+            qSendUSB.data++;
+        } else {
+            printf("Queue send fail \r\n");
+        }
+    }
+}
+
+
+void sendTask2(void * pvParameters) {
+    QueueHandle_t qSendHandle;
+    qSendHandle = (QueueHandle_t)pvParameters;
+    BaseType_t xQueueSendStatus;
+    qMesStruct qSendUSB = {2, 22};
+    while (1) {
+        osDelay(2000);
+        xQueueSendStatus = xQueueSend(qSendHandle, &qSendUSB, 10);
+        if (xQueueSendStatus == pdPASS) {
+            printf("Queue sendTask2 qSendUSB.id = %d qSendUSB.data = %d done \r\n", qSendUSB.id, qSendUSB.data);
+            qSendUSB.data++;
+        } else {
+            printf("Queue send fail \r\n");
+        }
+    }
+}
+
+void recTask(void * pvParameters) {
+    BaseType_t xQueueRecStatus;
+    QueueSetHandle_t qSetRecHandle;
+    qSetRecHandle = (QueueSetHandle_t)pvParameters;
+    QueueSetMemberHandle_t qSetDataHandle;
+    UBaseType_t uxNumberOfFreeSpaces;
+    qMesStruct qRecUSB = {0, 0};
+    while (1) {
+        qSetDataHandle = xQueueSelectFromSet(qSetRecHandle, portMAX_DELAY);
+        uxNumberOfFreeSpaces = uxQueueSpacesAvailable(qSetDataHandle);
+        if (qSetDataHandle != NULL) {
+            printf("Queue number of free spaces: %ld \r\n", uxNumberOfFreeSpaces);
+            xQueueRecStatus = xQueueReceive(qSetDataHandle, &qRecUSB, portMAX_DELAY);
+            if (xQueueRecStatus == pdPASS) {
+                printf("Queue receive qRecUSB.id = %d qRecUSB.data = %d done \r\n", qRecUSB.id, qRecUSB.data);
+            } else {
+                printf("Queue receive fail \r\n");
+            }
+        } else {
+            printf("Queue set not become available \r\n");
+        }
+    }
+}
+
+void writeMailboxTask(void * pvParameters) {
+    QueueHandle_t qWriteMailboxHandle;
+    qWriteMailboxHandle = (QueueHandle_t)pvParameters;
+    BaseType_t xWriteStatus;
+    qMesStruct qMailboxData = {3, 3};
+    while (1) {
+        xWriteStatus = xQueueOverwrite(qWriteMailboxHandle, &qMailboxData);
+        if(xWriteStatus != pdPASS) {
+            printf("Write mail box fail \r\n");
+        } else {
+            printf("Write mail box data: %d done \r\n", qMailboxData.data);
+        }
+        qMailboxData.data++;
+        osDelay(6000);
+    }
+}
+
+void readMailboxTask1(void * pvParameters) {
+    QueueHandle_t qMailboxReadHandle;
+    qMailboxReadHandle = (QueueHandle_t)pvParameters;
+    BaseType_t xReadStatus;
+    qMesStruct qMailboxData = {0, 0};
+    while (1) {
+        xReadStatus = xQueuePeek(qMailboxReadHandle, &qMailboxData, portMAX_DELAY);
+        if (xReadStatus != pdPASS) {
+            printf("Read mail box data fail \r\n");
+        } else {
+            printf("Read task1 mail box id %d; data: %d \r\n", qMailboxData.id, qMailboxData.data);
+        }
+        osDelay(3000);
+    }
+}
+
+void readMailboxTask2(void * pvParameters) {
+    QueueHandle_t qMailboxReadHandle;
+    qMailboxReadHandle = (QueueHandle_t)pvParameters;
+    BaseType_t xReadStatus;
+    qMesStruct qMailboxData = {0, 0};
+    while (1) {
+        xReadStatus = xQueuePeek(qMailboxReadHandle, &qMailboxData, portMAX_DELAY);
+        if (xReadStatus != pdPASS) {
+            printf("Read task2 mail box data fail \r\n");
+        } else {
+            printf("Read task2 mail box id %d; data: %d \r\n", qMailboxData.id, qMailboxData.data);
+        }
+        osDelay(3000);
+    }
+}
+
 void ledBlinkyTask1(void * pvParameters) {
   /* USER CODE BEGIN StartDefaultTask */
   /* Infinite loop */
